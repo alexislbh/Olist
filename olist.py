@@ -31,6 +31,7 @@ def join_tables(t1, t2, item):
     duckdb.sql(f'ALTER TABLE {table} DROP COLUMN "{item}_id:1"')
     return duckdb.sql(f"select * from {table}")
 
+<<<<<<< HEAD
 def dataframe_with_selections(df):
     df_with_selections = df.copy()
     df_with_selections.insert(0, "Select", False)
@@ -209,3 +210,17 @@ map.fit_bounds(map.get_bounds())
 
 # call to render Folium map in Streamlit
 st_data = folium_static(map, width=725)
+=======
+
+
+response = requests.get("https://github.com/WildCodeSchool/wilddata/raw/main/geolocation_dataset.zip")
+with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+    z.extractall()
+geolocation_df = pd.read_csv("geolocation_dataset.csv").drop(columns = "Unnamed: 0")\
+.rename(columns={"geolocation_zip_code_prefix": "zip_code_prefix_id"})
+geolocation_df['geolocation_city'] = geolocation_df['geolocation_city'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+duckdb.sql("CREATE OR REPLACE TABLE geolocation AS SELECT * FROM geolocation_df")
+
+st.dataframe(sql('show tables').df().name)
+st.dataframe(sql('select * from geolocation').df().head(10))
+>>>>>>> 2b9978e (update)
