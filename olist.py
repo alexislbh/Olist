@@ -58,21 +58,25 @@ def active_tables():
     tables = [table[0] for table in tables_list]
     return tables
 
+def not_active_tables(tables):
+    return [table for table in tables if table not in active_tables()]
+
+### Variables
+
+tables = ['orders', 'order_customers', 'order_payments', 'order_reviews', 'order_items', 'products', 'sellers', 'geolocation']
 
 ### Sidebar
 
 with st.sidebar:
     st.header('Load tables')
-    order = st.toggle('orders', value=True)
-    oc = st.toggle('order_customers')
-    op = st.toggle('order_payments')
-    orv = st.toggle('order_reviews')
-    oi = st.toggle('order_items')
-    prod = st.toggle('products')
-    sel = st.toggle('sellers')
-    geo = st.toggle('geolocation')
+    select_table = st.selectbox('Select tables to load :', not_active_tables(tables), placeholder='Tables', index=None)
 
-    if 'order_customers' not in active_tables() and oc:
+    if 'orders' not in active_tables():
+        # import orders_dataset
+        orders_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/orders_dataset.csv").drop(columns = "Unnamed: 0")
+        duckdb.sql("CREATE OR REPLACE TABLE orders AS SELECT * FROM orders_df")
+
+    if 'order_customers' not in active_tables() and  'order_customers' == select_table:
         start = time.time()
         # import orders_customers_dataset
         order_customers_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/orders_customers_dataset.csv").drop(columns = "Unnamed: 0")\
@@ -80,7 +84,7 @@ with st.sidebar:
         duckdb.sql("CREATE OR REPLACE TABLE order_customers AS SELECT * FROM order_customers_df")
         oc_time = time.time() - start
 
-    if 'geolocation' not in active_tables() and geo:
+    if 'geolocation' not in active_tables() and 'geolocation '== select_table:
         # import geolocation_dataset
         response = requests.get("https://github.com/WildCodeSchool/wilddata/raw/main/geolocation_dataset.zip")
         with zipfile.ZipFile(io.BytesIO(response.content)) as z:
@@ -90,36 +94,31 @@ with st.sidebar:
         geolocation_df['geolocation_city'] = geolocation_df['geolocation_city'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
         duckdb.sql("CREATE OR REPLACE TABLE geolocation AS SELECT * FROM geolocation_df")
 
-    if 'order_items' not in active_tables() and oi:
+    if 'order_items' not in active_tables() and 'order_items' == select_table:
         # import order_items_dataset
         order_items_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/order_items_dataset.csv").drop(columns = "Unnamed: 0")
         duckdb.sql("CREATE OR REPLACE TABLE order_items AS SELECT * FROM order_items_df")
 
-    if 'order_payments' not in active_tables() and op:
+    if 'order_payments' not in active_tables() and 'order_payments' == select_table:
         start = time.time()
         # import order_payments_dataset
         order_payments_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/order_payments_dataset.csv").drop(columns = "Unnamed: 0")
         duckdb.sql("CREATE OR REPLACE TABLE order_payments AS SELECT * FROM order_payments_df")
         op_time = time.time() - start
 
-    if 'order_reviews' not in active_tables() and orv:
+    if 'order_reviews' not in active_tables() and 'order_reviews' == select_table:
         start = time.time()
         # import order_reviews_dataset
         order_reviews_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/order_reviews_dataset.csv").drop(columns = "Unnamed: 0")
         duckdb.sql("CREATE OR REPLACE TABLE order_reviews AS SELECT * FROM order_reviews_df")
         orv_time = time.time() - start
 
-    if 'orders' not in active_tables() and order:
-        # import orders_dataset
-        orders_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/orders_dataset.csv").drop(columns = "Unnamed: 0")
-        duckdb.sql("CREATE OR REPLACE TABLE orders AS SELECT * FROM orders_df")
-
-    if 'products' not in active_tables() and prod:
+    if 'products' not in active_tables() and 'products' == select_table:
         # import products_dataset
         products_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/products_dataset.csv").drop(columns = "Unnamed: 0")
         duckdb.sql("CREATE OR REPLACE TABLE products AS SELECT * FROM products_df")
 
-    if 'sellers' not in active_tables() and sel:
+    if 'sellers' not in active_tables() and 'sellers' == select_table:
         # import sellers_dataset
         sellers_df = pd.read_csv("https://raw.githubusercontent.com/WildCodeSchool/wilddata/main/sellers_dataset.csv").drop(columns = "Unnamed: 0")\
         .rename(columns={"seller_zip_code_prefix": "zip_code_prefix_id"})
