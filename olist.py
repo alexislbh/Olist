@@ -368,33 +368,32 @@ with tab2:
 
 ### Word counter review
 
-if 'order_reviews' in active_tables():
-    tab1, tab2 = st.tabs(["Word counter", "Wordcloud"])
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    
-    review_mess = sql('''
-        select review_comment_message as text
-        from order_reviews
-        where review_comment_message is not null
-        ''').df()
-    
-    text = " ".join(i for i in review_mess.text)
-    word_token = nltk.tokenize.word_tokenize(text, language='portuguese', preserve_line=False)
-    Words = pd.DataFrame(nltk.FreqDist(word_token).values(), index = nltk.FreqDist(word_token).keys()).sort_values(by=0, ascending=False).head(20)
-    Words.plot(kind="barh")
-    word_token = nltk.word_tokenize(text.lower())
-    Ponct = ['.', '..', '...', '....', '.....', '’','"',':',',', '(', ')','!','-','_','$','%','*','^','¨','<','>','?', ';', '/','+','='
-            ,'e','o','!', 'a', 'é','2', 'q', '1','3','4','5','6','7','8','20','100','10']
-    tokens_clean = []
+tab1, tab2 = st.tabs(["Word counter", "Wordcloud"])
+nltk.download('punkt')
+nltk.download('stopwords')
 
-    for words in word_token:
-        if words not in nltk.corpus.stopwords.words("portuguese") and words not in Ponct:
-            tokens_clean.append(words)
-                
-    df_word_review = pd.DataFrame({'words' : nltk.FreqDist(tokens_clean).keys(), 'frequency': nltk.FreqDist(tokens_clean).values()})
-    word_freq_dist = df_word_review.set_index('words').T.to_dict('records')[0]
-    duckdb.sql("CREATE OR REPLACE TABLE word_review AS SELECT * FROM df_word_review")
+review_mess = sql('''
+    select review_comment_message as text
+    from order_reviews
+    where review_comment_message is not null
+    ''').df()
+
+text = " ".join(i for i in review_mess.text)
+word_token = nltk.tokenize.word_tokenize(text, language='portuguese', preserve_line=False)
+Words = pd.DataFrame(nltk.FreqDist(word_token).values(), index = nltk.FreqDist(word_token).keys()).sort_values(by=0, ascending=False).head(20)
+Words.plot(kind="barh")
+word_token = nltk.word_tokenize(text.lower())
+Ponct = ['.', '..', '...', '....', '.....', '’','"',':',',', '(', ')','!','-','_','$','%','*','^','¨','<','>','?', ';', '/','+','='
+        ,'e','o','!', 'a', 'é','2', 'q', '1','3','4','5','6','7','8','20','100','10']
+tokens_clean = []
+
+for words in word_token:
+    if words not in nltk.corpus.stopwords.words("portuguese") and words not in Ponct:
+        tokens_clean.append(words)
+            
+df_word_review = pd.DataFrame({'words' : nltk.FreqDist(tokens_clean).keys(), 'frequency': nltk.FreqDist(tokens_clean).values()})
+word_freq_dist = df_word_review.set_index('words').T.to_dict('records')[0]
+duckdb.sql("CREATE OR REPLACE TABLE word_review AS SELECT * FROM df_word_review")
 
 with tab1:
     st.header("Word counter review")
