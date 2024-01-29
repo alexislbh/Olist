@@ -369,7 +369,6 @@ with tab2:
 ### Word counter review
 
 if 'order_reviews' in active_tables():
-    tab1, tab2 = st.tabs(["Wordcloud", "Word counter"])
             
     nltk.download('punkt')
     nltk.download('stopwords')
@@ -396,19 +395,19 @@ if 'order_reviews' in active_tables():
     world_freq_dist = nltk.FreqDist(tokens_clean)
     df_word_review = pd.DataFrame({'words' : world_freq_dist.keys(), 'frequency': world_freq_dist.values()})
     duckdb.sql("CREATE OR REPLACE TABLE word_review AS SELECT * FROM df_word_review")
-    with tab1:
-        ### Wordcloud
-        st.header("Wordcloud review")
-        wordcloud = WordCloud(width=480, height=480, background_color="black", colormap="rainbow", max_words=50)
-        wordcloud.generate_from_frequencies(nltk.FreqDist(tokens_clean))
-        fig = plt.figure()
-        plt.imshow(wordcloud, interpolation="bilinear")
-        plt.axis("off")
-        plt.margins(x=0, y=0)
-        plt.show()
-        st.pyplot(fig)
-    with tab2:
-        st.header("Word counter review")
-        fig = px.bar(sql('word_review', 'all').df().sort_values(by='frequency', ascending=False).head(20).sort_values(by='frequency', ascending=True), x='frequency', y='words')
-        fig.update_layout(title="Most frequent words in reviews", xaxis_title="Frequency", yaxis_title="Words")
-        st.plotly_chart(fig)
+    
+    ### Wordcloud
+    st.header("Wordcloud review")
+    wordcloud = WordCloud(width=480, height=480, background_color="black", colormap="rainbow", max_words=50)
+    wordcloud.generate_from_frequencies(nltk.FreqDist(tokens_clean))
+    fig = plt.figure()
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.margins(x=0, y=0)
+    plt.show()
+    st.pyplot(fig)
+    
+    st.header("Word counter review")
+    fig = px.bar(sql('word_review', 'all').df().sort_values(by='frequency', ascending=False).head(20).sort_values(by='frequency', ascending=True), x='frequency', y='words')
+    fig.update_layout(title="Most frequent words in reviews", xaxis_title="Frequency", yaxis_title="Words")
+    st.plotly_chart(fig)
