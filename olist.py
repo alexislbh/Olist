@@ -234,13 +234,10 @@ with col3:
     st.write('Percent of late')
     st.metric(label="%", value=percent_after_delivery_estimated, delta=None)
     st.metric(label="%", value=
-              round(round(avg_review_score_after_delivery_estimated.df()['avg'],2)/
-              round(avg_review_score_before_delivery_estimated.df()['avg'],2) * 100 - 100,2),
-              delta=None)
-    st.metric(label="%", value=
-              round(round(avg_day_delevery_carrier_after_delivery_estimated.df()['avg'],2)/
-                round(avg_day_delevery_carrier_before_delivery_estimated.df()['avg'],2) * 100 - 100,2),
-              delta=None)
+              round(round(avg_review_score_after_delivery_estimated.df()['avg'],2)/ \
+                    round(avg_review_score_before_delivery_estimated.df()['avg'],2) * 100 - 100,2), delta=None)
+    st.metric(label="%", value= round(round(avg_day_delevery_carrier_after_delivery_estimated.df()['avg'],2)/ \
+                                      round(avg_day_delevery_carrier_before_delivery_estimated.df()['avg'],2) * 100 - 100,2), delta=None)
 
 review_by_month = sql('''
 select avg(review_score) as avg_review
