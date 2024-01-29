@@ -357,3 +357,51 @@ with tab2:
     
     # call to render Folium map in Streamlit
     st_data = folium_static(map_customers, width=725)
+
+### Word counter review
+
+tab1, tab2 = st.tabs(["Wordcloud", "Word counter"])
+        
+# nltk.download('punkt')
+# nltk.download('stopwords')
+
+# review_mess = sql('''
+#     select review_comment_message as text
+#     from order_reviews
+#     where review_comment_message is not null
+#     ''').df()
+
+# text = " ".join(i for i in review_mess.text)
+# word_token = nltk.tokenize.word_tokenize(text, language='portuguese', preserve_line=False)
+# Words = pd.DataFrame(nltk.FreqDist(word_token).values(), index = nltk.FreqDist(word_token).keys()).sort_values(by=0, ascending=False).head(20)
+# Words.plot(kind="barh")
+# word_token = nltk.word_tokenize(text.lower())
+# Ponct = ['.', '..', '...', '....', '.....', '’','"',':',',', '(', ')','!','-','_','$','%','*','^','¨','<','>','?', ';', '/','+','='
+#         ,'e','o','!', 'a', 'é','2', 'q', '1','3','4','5','6','7','8','20','100','10']
+# tokens_clean = []
+
+# for words in word_token:
+#     if words not in nltk.corpus.stopwords.words("portuguese") and words not in Ponct:
+#         tokens_clean.append(words)
+
+# df_word_review = pd.DataFrame({'words' : nltk.FreqDist(tokens_clean).keys(), 'frequency': nltk.FreqDist(tokens_clean).values()})
+
+with tab1:
+    ### Wordcloud
+    st.header("Wordcloud review")
+    st.image('./img/wordcloud.png')
+    # wordcloud = WordCloud(width=480, height=480, background_color="black", colormap="rainbow", max_words=50)
+    # wordcloud.generate_from_frequencies(nltk.FreqDist(tokens_clean))
+    # fig = plt.figure()
+    # plt.imshow(wordcloud, interpolation="bilinear")
+    # plt.axis("off")
+    # plt.margins(x=0, y=0)
+    # plt.show()
+    # st.pyplot(fig)
+with tab2:
+    st.header("Word counter review")
+    st.image('./img/wordcounter.png')
+
+    # fig = px.bar(df_word_review.sort_values(by='frequency', ascending=False).head(20).sort_values(by='frequency', ascending=True), x='frequency', y='words')
+    # fig.update_layout(title="Most frequent words in reviews", xaxis_title="Frequency", yaxis_title="Words")
+    # st.plotly_chart(fig)
