@@ -13,7 +13,7 @@ from folium.plugins import MarkerCluster
 from matplotlib import pyplot as plt
 import nltk
 from wordcloud import WordCloud
-from streamlit_folium import st_folium, folium_static
+from streamlit_folium import folium_static
 
 
 ### Functions
@@ -290,114 +290,109 @@ fig.update_layout(
 st.plotly_chart(fig)
 
 
-if 'geolocation' in active_tables():
-    tab1, tab2 = st.tabs(["Sellers", "Customers"])
+### Map
+tab1, tab2 = st.tabs(["Sellers", "Customers"])
 
 with tab1:
     st.header("Sellers")
-    if 'sellers' in active_tables():
-        sellers__geolocation = join_tables('sellers', 'geolocation', 'zip_code_prefix')
-        sellers_geo_clean = sql('''
-        select
-            count(seller_id)
-            , count(zip_code_prefix_id) as zipcode
-            , avg(geolocation_lat) as lat
-            , avg(geolocation_lng) as lng
-            , geolocation_city as city
-        from sellers__geolocation
-        where geolocation_lat is not null
-        group by city
-        ''')
-        sellers_geo_clean.df()
+    sellers__geolocation = join_tables('sellers', 'geolocation', 'zip_code_prefix')
+    sellers_geo_clean = sql('''
+    select
+        count(seller_id)
+        , count(zip_code_prefix_id) as zipcode
+        , avg(geolocation_lat) as lat
+        , avg(geolocation_lng) as lng
+        , geolocation_city as city
+    from sellers__geolocation
+    where geolocation_lat is not null
+    group by city
+    ''')
 
-        df = sellers_geo_clean.df()
+    df = sellers_geo_clean.df()
 
-        map_sellers = folium.Map(tiles ='cartodbpositron')
-        marker_cluster = MarkerCluster().add_to(map_sellers)
-        for i, row in df.iterrows():
-            lat = df.at[i, 'lat']
-            lng = df.at[i, 'lng']
-            popup = 'City : ' + str(df.at[i, 'city'])
-            icon_perso = folium.Icon(color="blue", icon='briefcase')
-            folium.Marker(location=[lat,lng], icon=icon_perso, popup=popup).add_to(marker_cluster)
-        map_sellers.fit_bounds(map_sellers.get_bounds())
+    map_sellers = folium.Map(tiles ='cartodbpositron')
+    marker_cluster = MarkerCluster().add_to(map_sellers)
+    for i, row in df.iterrows():
+        lat = df.at[i, 'lat']
+        lng = df.at[i, 'lng']
+        popup = 'City : ' + str(df.at[i, 'city'])
+        icon_perso = folium.Icon(color="blue", icon='briefcase')
+        folium.Marker(location=[lat,lng], icon=icon_perso, popup=popup).add_to(marker_cluster)
+    map_sellers.fit_bounds(map_sellers.get_bounds())
 
-        # call to render Folium map in Streamlit
-        st_data = folium_static(map_sellers, width=725)
+    # call to render Folium map in Streamlit
+    st_data = folium_static(map_sellers, width=725)
 
 with tab2:
     st.header("Customers")
-    if 'order_customers' in active_tables():
-        customers = sql('''
-        select
-            customer_unique_id
-            , zip_code_prefix_id
-            , customer_city
-            , customer_state
-        from order_customers
-        group by 1, 2, 3, 4
-        ''')
-        customers_geo_clean = sql('''
-        select
-            count(t1.customer_unique_id) as nb_customer
-            , t1.zip_code_prefix_id as zipcode
-            , avg(t2.geolocation_lat) as lat
-            , avg(t2.geolocation_lng) as lng
-            , t2.geolocation_city as city
-        from customers t1
-        left join geolocation t2
-            on t1.zip_code_prefix_id =  t2.zip_code_prefix_id
-        where geolocation_lat is not null
-        group by zipcode, city
-        ''')
-        customers_geo_clean.df()
+    customers = sql('''
+    select
+        customer_unique_id
+        , zip_code_prefix_id
+        , customer_city
+        , customer_state
+    from order_customers
+    group by 1, 2, 3, 4
+    ''')
+    customers_geo_clean = sql('''
+    select
+        count(t1.customer_unique_id) as nb_customer
+        , t1.zip_code_prefix_id as zipcode
+        , avg(t2.geolocation_lat) as lat
+        , avg(t2.geolocation_lng) as lng
+        , t2.geolocation_city as city
+    from customers t1
+    left join geolocation t2
+        on t1.zip_code_prefix_id =  t2.zip_code_prefix_id
+    where geolocation_lat is not null
+    group by zipcode, city
+    ''')
 
-        df = customers_geo_clean.df()
-        map_customers = folium.Map(tiles ='cartodbpositron')
-        marker_cluster = MarkerCluster().add_to(map_customers)
-        for i, row in df.iterrows():
-            lat = df.at[i, 'lat']
-            lng = df.at[i, 'lng']
-            popup = 'City : ' + str(df.at[i, 'city'])
-            icon_perso = folium.Icon(color="blue", icon='user')
-            folium.Marker(location=[lat,lng], icon=icon_perso, popup=popup).add_to(marker_cluster)
-        map_customers.fit_bounds(map_customers.get_bounds())
-        
-        # call to render Folium map in Streamlit
-        st_data = folium_static(map_customers, width=725)
+    df = customers_geo_clean.df()
+    map_customers = folium.Map(tiles ='cartodbpositron')
+    marker_cluster = MarkerCluster().add_to(map_customers)
+    for i, row in df.iterrows():
+        lat = df.at[i, 'lat']
+        lng = df.at[i, 'lng']
+        popup = 'City : ' + str(df.at[i, 'city'])
+        icon_perso = folium.Icon(color="blue", icon='user')
+        folium.Marker(location=[lat,lng], icon=icon_perso, popup=popup).add_to(marker_cluster)
+    map_customers.fit_bounds(map_customers.get_bounds())
+    
+    # call to render Folium map in Streamlit
+    st_data = folium_static(map_customers, width=725)
 
 ### Word counter review
 
-if 'order_reviews' in active_tables():
-            
-    nltk.download('punkt')
-    nltk.download('stopwords')
+tab1, tab2 = st.tabs(["Wordcloud", "Word counter"])
+        
+nltk.download('punkt')
+nltk.download('stopwords')
 
-    review_mess = sql('''
-        select review_comment_message as text
-        from order_reviews
-        where review_comment_message is not null
-        ''').df()
+review_mess = sql('''
+    select review_comment_message as text
+    from order_reviews
+    where review_comment_message is not null
+    ''').df()
 
-    text = " ".join(i for i in review_mess.text)
-    word_token = nltk.tokenize.word_tokenize(text, language='portuguese', preserve_line=False)
-    Words = pd.DataFrame(nltk.FreqDist(word_token).values(), index = nltk.FreqDist(word_token).keys()).sort_values(by=0, ascending=False).head(20)
-    Words.plot(kind="barh")
-    word_token = nltk.word_tokenize(text.lower())
-    Ponct = ['.', '..', '...', '....', '.....', '’','"',':',',', '(', ')','!','-','_','$','%','*','^','¨','<','>','?', ';', '/','+','='
-            ,'e','o','!', 'a', 'é','2', 'q', '1','3','4','5','6','7','8','20','100','10']
-    tokens_clean = []
+text = " ".join(i for i in review_mess.text)
+word_token = nltk.tokenize.word_tokenize(text, language='portuguese', preserve_line=False)
+Words = pd.DataFrame(nltk.FreqDist(word_token).values(), index = nltk.FreqDist(word_token).keys()).sort_values(by=0, ascending=False).head(20)
+Words.plot(kind="barh")
+word_token = nltk.word_tokenize(text.lower())
+Ponct = ['.', '..', '...', '....', '.....', '’','"',':',',', '(', ')','!','-','_','$','%','*','^','¨','<','>','?', ';', '/','+','='
+        ,'e','o','!', 'a', 'é','2', 'q', '1','3','4','5','6','7','8','20','100','10']
+tokens_clean = []
 
-    for words in word_token:
-        if words not in nltk.corpus.stopwords.words("portuguese") and words not in Ponct:
-            tokens_clean.append(words)
+for words in word_token:
+    if words not in nltk.corpus.stopwords.words("portuguese") and words not in Ponct:
+        tokens_clean.append(words)
 
-    world_freq_dist = nltk.FreqDist(tokens_clean)
-    df_word_review = pd.DataFrame({'words' : world_freq_dist.keys(), 'frequency': world_freq_dist.values()})
-    duckdb.sql("CREATE OR REPLACE TABLE word_review AS SELECT * FROM df_word_review")
-    
+df_word_review = pd.DataFrame({'words' : nltk.FreqDist(tokens_clean).keys(), 'frequency': nltk.FreqDist(tokens_clean).values()})
+
+with tab1:
     ### Wordcloud
-    st.header("Wordcloud review")
+    
     wordcloud = WordCloud(width=480, height=480, background_color="black", colormap="rainbow", max_words=50)
     wordcloud.generate_from_frequencies(nltk.FreqDist(tokens_clean))
     fig = plt.figure()
@@ -406,8 +401,8 @@ if 'order_reviews' in active_tables():
     plt.margins(x=0, y=0)
     plt.show()
     st.pyplot(fig)
-    
+with tab2:
     st.header("Word counter review")
-    fig = px.bar(sql('word_review', 'all').df().sort_values(by='frequency', ascending=False).head(20).sort_values(by='frequency', ascending=True), x='frequency', y='words')
+    fig = px.bar(df_word_review.sort_values(by='frequency', ascending=False).head(20).sort_values(by='frequency', ascending=True), x='frequency', y='words')
     fig.update_layout(title="Most frequent words in reviews", xaxis_title="Frequency", yaxis_title="Words")
     st.plotly_chart(fig)
